@@ -71,27 +71,25 @@ final class Limiter
         };
 
         $options
-            ->define('id')->required()
-            ->define('strategy')
-                ->required()
-                ->allowedValues('token_bucket', 'fixed_window')
+            ->setRequired('id')
+            ->setRequired('strategy')
+            ->setAllowedValues('strategy', ['token_bucket', 'fixed_window'])
+            ->addAllowedTypes('limit', 'int')
+            ->addAllowedTypes('interval', 'string')
+            ->setNormalizer('interval', $intervalNormalizer)
+            ->setDefault('rate', function (OptionsResolver $rate) use ($intervalNormalizer) {
+                $rate
+                    ->define('amount')->allowedTypes('int')->default(1)
+                    ->define('interval')->allowedTypes('string')->normalize($intervalNormalizer)
+                ;
+            })
+            ->setNormalizer('rate', function (Options $options, $value) {
+                if (!isset($value['interval'])) {
+                    return null;
+                }
 
-            ->define('limit')->allowedTypes('int')
-            ->define('interval')->allowedTypes('string')->normalize($intervalNormalizer)
-            ->define('rate')
-                ->default(function (OptionsResolver $rate) use ($intervalNormalizer) {
-                    $rate
-                        ->define('amount')->allowedTypes('int')->default(1)
-                        ->define('interval')->allowedTypes('string')->normalize($intervalNormalizer)
-                    ;
-                })
-                ->normalize(function (Options $options, $value) {
-                    if (!isset($value['interval'])) {
-                        return null;
-                    }
-
-                    return new Rate($value['interval'], $value['amount']);
-                })
+                return new Rate($value['interval'], $value['amount']);
+            })
         ;
     }
 }
