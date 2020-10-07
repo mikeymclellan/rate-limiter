@@ -74,13 +74,19 @@ final class Limiter
             ->setRequired('id')
             ->setRequired('strategy')
             ->setAllowedValues('strategy', ['token_bucket', 'fixed_window'])
+            ->setDefined('limit')
             ->addAllowedTypes('limit', 'int')
+            ->setDefined('interval')
             ->addAllowedTypes('interval', 'string')
             ->setNormalizer('interval', $intervalNormalizer)
+            ->setDefined('rate')
             ->setDefault('rate', function (OptionsResolver $rate) use ($intervalNormalizer) {
                 $rate
-                    ->define('amount')->allowedTypes('int')->default(1)
-                    ->define('interval')->allowedTypes('string')->normalize($intervalNormalizer)
+                    ->setDefault('amount', 1)
+                    ->addAllowedTypes('amount', 'int')
+                    ->setDefined('interval')
+                    ->addAllowedTypes('interval', 'string')
+                    ->setNormalizer('interval', $intervalNormalizer)
                 ;
             })
             ->setNormalizer('rate', function (Options $options, $value) {
